@@ -1,1 +1,14 @@
+# Build
 target/
+
+# SQLite database
+*.db
+
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
