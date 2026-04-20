@@ -1,0 +1,148 @@
+# Raízes do Nordeste — API Back-End
+
+API REST da rede de lanchonetes **Raízes do Nordeste**, desenvolvida com Spring Boot 4 + Java 21 + SQLite.
+
+---
+
+## Requisitos
+
+| Ferramenta | Versão mínima |
+|---|---|
+| Java | 21 |
+| Maven | 3.9+ |
+| SQLite | (embutido via JDBC) |
+
+---
+
+## Configuração
+
+Copie o arquivo de exemplo e ajuste se necessário:
+
+```bash
+cp src/main/resources/application.properties.example src/main/resources/application.properties
+```
+
+Variáveis principais em `application.properties`:
+
+```properties
+spring.datasource.url=jdbc:sqlite:raizes.db
+jwt.secret=raizes-nordeste-secret-key-2026-muito-segura
+jwt.expiration-ms=3600000
+```
+
+---
+
+## Como executar
+
+```bash
+# 1. Instalar dependências e compilar
+mvn clean compile
+
+# 2. Iniciar a API (migrations e seed são executados automaticamente via Flyway)
+mvn spring-boot:run
+```
+
+A API estará disponível em: `http://localhost:8080`
+
+---
+
+## Swagger / OpenAPI
+
+Acesse a documentação interativa em:
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+JSON da spec:
+```
+http://localhost:8080/v3/api-docs
+```
+
+---
+
+## Usuário admin (seed)
+
+| Campo | Valor |
+|---|---|
+| E-mail | admin@raizes.com |
+| Senha | admin123 |
+| Role | ADMIN |
+
+---
+
+## Como rodar os testes
+
+```bash
+mvn test
+```
+
+---
+
+## Fluxo principal (Pedido → Pagamento → Status)
+
+```
+POST /auth/login                          → obtém token JWT
+POST /pedidos                             → cria pedido (canalPedido obrigatório)
+POST /pagamentos/pedidos/{id}?forma=MOCK  → processa pagamento mock
+PATCH /pedidos/{id}/status                → atualiza status (EM_PREPARO → PRONTO → ENTREGUE)
+```
+
+---
+
+## Endpoints resumidos
+
+| Método | Rota | Permissão |
+|---|---|---|
+| POST | /auth/register | público |
+| POST | /auth/login | público |
+| GET | /unidades | público |
+| POST | /unidades | ADMIN, GERENTE |
+| GET | /produtos | público |
+| POST | /produtos | ADMIN, GERENTE |
+| GET | /estoque/unidades/{id} | ADMIN, GERENTE, ATENDENTE |
+| POST | /estoque/unidades/{id}/movimentar | ADMIN, GERENTE |
+| POST | /pedidos | CLIENTE, ATENDENTE, ADMIN |
+| GET | /pedidos | ADMIN, GERENTE, COZINHA, ATENDENTE |
+| GET | /pedidos?canalPedido=TOTEM&status=PAGO | ADMIN, GERENTE, COZINHA, ATENDENTE |
+| PATCH | /pedidos/{id}/status | ADMIN, GERENTE, COZINHA, ATENDENTE |
+| DELETE | /pedidos/{id} | ADMIN, GERENTE, CLIENTE |
+| POST | /pagamentos/pedidos/{id} | CLIENTE, ATENDENTE, ADMIN |
+| GET | /fidelidade/usuarios/{id} | ADMIN, GERENTE, CLIENTE |
+| POST | /fidelidade/usuarios/{id}/resgatar | ADMIN, CLIENTE |
+
+---
+
+## Coleção Postman
+
+Importe o arquivo `raizes-postman-collection.json` na raiz do repositório.
+
+Ordem sugerida de execução:
+1. Auth / Login Admin
+2. Unidades / Listar
+3. Produtos / Listar
+4. Auth / Registrar Cliente
+5. Auth / Login Cliente
+6. Pedidos / Criar Pedido
+7. Pagamentos / Processar Mock
+8. Pedidos / Atualizar Status
+9. Fidelidade / Consultar Pontos
+10. Erros / Estoque Insuficiente
+
+---
+
+## Pagamento Mock
+
+O gateway mock aprova todos os pagamentos **exceto** quando o valor total é múltiplo de 13.
+
+Para testar pagamento **recusado**: crie um pedido com total = R$ 26,00 (ex: 2x Pamonha Doce a R$ 13,00 — ajuste o preço via SQL).
+
+---
+
+## LGPD
+
+- Senhas armazenadas com BCrypt (nunca em texto plano)
+- Consentimento LGPD registrado com timestamp no cadastro
+- Dados sensíveis não expostos em responses (senha nunca retornada)
+- Todas as ações sensíveis (criar pedido, pagamento, cancelamento, mudança de status) são registradas na tabela `audit_log`
+- Roles controlam acesso a dados por perfil
