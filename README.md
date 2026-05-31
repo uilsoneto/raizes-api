@@ -10,6 +10,7 @@ API REST da rede de lanchonetes **Raízes do Nordeste**, desenvolvida com Spring
 |---|---|
 | Java | 21 |
 | Maven | 3.9+ |
+| Docker (opcional) | 24+ |
 | SQLite | (embutido via JDBC) |
 
 ---
@@ -32,17 +33,41 @@ jwt.expiration-ms=3600000
 
 ---
 
-## Como executar
+## Como executar (local)
 
 ```bash
 # 1. Instalar dependências e compilar
 mvn clean compile
 
-# 2. Iniciar a API (migrations e seed são executados automaticamente via Flyway)
+# 2. Iniciar a API (tabelas e seed são criados automaticamente)
 mvn spring-boot:run
 ```
 
 A API estará disponível em: `http://localhost:8080`
+
+---
+
+## Como executar (Docker)
+
+```bash
+# Build da imagem
+docker build -t raizes-api .
+
+# Executar o container
+docker run -d -p 8080:8080 --name raizes-api raizes-api
+```
+
+Para persistir o banco entre reinícios:
+
+```bash
+docker run -d -p 8080:8080 -v raizes-data:/app/data --name raizes-api raizes-api
+```
+
+Parar e remover:
+
+```bash
+docker stop raizes-api && docker rm raizes-api
+```
 
 ---
 
@@ -136,6 +161,33 @@ Ordem sugerida de execução:
 O gateway mock aprova todos os pagamentos **exceto** quando o valor total é múltiplo de 13.
 
 Para testar pagamento **recusado**: crie um pedido com total = R$ 26,00 (ex: 2x Pamonha Doce a R$ 13,00 — ajuste o preço via SQL).
+
+---
+
+## Estrutura do Projeto
+
+```
+src/main/java/com/raizes/
+├── RaizesApplication.java
+├── api/
+│   ├── controller/          (7 controllers REST)
+│   └── exception/           (GlobalExceptionHandler)
+├── application/
+│   ├── dto/
+│   │   ├── request/         (8 DTOs de entrada)
+│   │   └── response/        (7 DTOs de saída)
+│   └── service/             (8 services)
+├── config/
+│   ├── SecurityConfig.java
+│   └── SwaggerConfig.java
+├── domain/
+│   ├── entity/              (8 entidades JPA)
+│   └── enums/               (5 enums)
+└── infrastructure/
+    ├── mock/                (PagamentoGatewayMock)
+    ├── repository/          (8 interfaces JPA)
+    └── security/            (JwtUtil, JwtFilter)
+```
 
 ---
 
