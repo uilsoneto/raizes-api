@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: raizes-api
+  namespace: raizes-api
+  labels:
+    app: raizes-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: raizes-api
+  template:
+    metadata:
+      labels:
+        app: raizes-api
+    spec:
+      containers:
+        - name: raizes-api
+          image: uilsoneto/raizes-api:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:sqlite:/app/data/raizes.db"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: raizes-secrets
+                  key: jwt-secret
+            - name: JWT_EXPIRATION_MS
+              value: "3600000"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: raizes-data-pvc

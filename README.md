@@ -71,12 +71,61 @@ docker stop raizes-api && docker rm raizes-api
 
 ---
 
+## Deploy em K3s (Produção)
+
+**Pré-requisitos:** K3s com Traefik (padrão) e cert-manager instalado com ClusterIssuer `letsencrypt-production`.
+
+**URL de produção:** https://raizes-api.uilson.com
+
+```bash
+# Aplicar todos os manifests
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/secret.yaml
+kubectl apply -f k8s/pvc.yaml
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/ingress.yaml
+```
+
+Ou de uma vez:
+
+```bash
+kubectl apply -f k8s/
+```
+
+**Verificar status:**
+
+```bash
+kubectl get pods -n raizes-api
+kubectl get ingress -n raizes-api
+kubectl get certificate -n raizes-api
+```
+
+**Swagger em produção:**
+```
+https://raizes-api.uilson.com/swagger-ui.html
+```
+
+**Atualizar imagem:**
+
+```bash
+kubectl set image deployment/raizes-api raizes-api=uilsoneto/raizes-api:NEW_TAG -n raizes-api
+```
+
+---
+
 ## Swagger / OpenAPI
 
-Acesse a documentação interativa em:
+Acesse a documentação interativa:
 
+**Local:**
 ```
 http://localhost:8080/swagger-ui.html
+```
+
+**Produção (K3s):**
+```
+https://raizes-api.uilson.com/swagger-ui.html
 ```
 
 JSON da spec:
