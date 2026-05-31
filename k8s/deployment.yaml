@@ -24,7 +24,7 @@ spec:
               mountPath: /app/data
       containers:
         - name: raizes-api
-          image: uilsoneto/raizes-api:1.0.1
+          image: uilsoneto/raizes-api:1.0.2
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
