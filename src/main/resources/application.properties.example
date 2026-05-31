@@ -3,11 +3,15 @@ spring.application.name=raizes-api
 spring.datasource.url=jdbc:sqlite:raizes.db
 spring.datasource.driver-class-name=org.sqlite.JDBC
 
-spring.jpa.hibernate.ddl-auto=none
+spring.jpa.hibernate.ddl-auto=update
 spring.jpa.database-platform=org.hibernate.community.dialect.SQLiteDialect
 spring.jpa.show-sql=false
 
-spring.flyway.enabled=true
+spring.flyway.enabled=false
+
+spring.sql.init.mode=always
+spring.sql.init.data-locations=classpath:data.sql
+spring.jpa.defer-datasource-initialization=true
 
 jwt.secret=your-secret-key-here
 jwt.expiration-ms=3600000
