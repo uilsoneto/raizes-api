@@ -11,16 +11,16 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 RUN addgroup -S raizes && adduser -S raizes -G raizes
-RUN mkdir -p /app/data && chown raizes:raizes /app/data
+RUN mkdir -p /app/data && chown -R raizes:raizes /app/data && chmod 775 /app/data
 
 COPY --from=build /app/target/*.jar app.jar
+RUN chown raizes:raizes app.jar
 
 USER raizes
 
 EXPOSE 8080
 
-ENV SPRING_DATASOURCE_URL=jdbc:sqlite:/app/data/raizes.db
-ENV JWT_SECRET=raizes-nordeste-secret-key-2026-muito-segura
+ENV SPRING_DATASOURCE_URL=jdbc:sqlite:/app/data/raizes.db?journal_mode=WAL
 ENV JWT_EXPIRATION_MS=3600000
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
